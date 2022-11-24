@@ -48,7 +48,7 @@ func (o *Options) validate(ctx context.Context) error {
 			"Try setting the correct Pod CIDR using the vanilla *liqoctl install* command, or installing Liqo with Helm",
 			o.PodCIDR, err)
 	}
-	o.Printer.Verbosef("Pod CIDR: %s\n", o.PodCIDR)
+	o.Printer.Verbosef("[LIQOCTL]: Pod CIDR: %s\n", o.PodCIDR)
 
 	if err := o.validateServiceCIDR(ctx); err != nil {
 		return fmt.Errorf("failed validating Service CIDR %q: %w. "+
