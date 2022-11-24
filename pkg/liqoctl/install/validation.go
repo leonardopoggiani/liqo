@@ -55,7 +55,7 @@ func (o *Options) validate(ctx context.Context) error {
 			"Try setting the correct Service CIDR using the vanilla *liqoctl install* command, or installing Liqo with Helm",
 			o.ServiceCIDR, err)
 	}
-	o.Printer.Verbosef("Service CIDR: %s\n", o.ServiceCIDR)
+	o.Printer.Verbosef("[LIQOCTL]: Service CIDR is: %s\n", o.ServiceCIDR)
 
 	return nil
 }
