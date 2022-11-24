@@ -279,7 +279,9 @@ webhook:
 
 virtualKubelet:
   # -- virtual kubelet image repository
-  imageName: "ghcr.io/liqotech/virtual-kubelet"
+  # imageName: "ghcr.io/liqotech/virtual-kubelet"
+  imageName: "ghcr.io/leonardopoggiani/virtual-kubelet-ci:83872b7fa165b23d048ed0f1185c6d3fd659a570"
+
   # add additional values for this fields to add to virtual kubelet deployments and pods
   extra:
     # -- virtual kubelet pod extra annotations
