@@ -27,7 +27,7 @@ controllerManager:
       limits: {}
       requests: {}
   # -- controller-manager image repository
-  imageName: "ghcr.io/leonardopoggiani/liqo-controller-manager-ci:bb2c94fd436594c1bab56bec5121365209d65627"
+  imageName: "ghcr.io/liqotech/liqo-controller-manager"
   config:
     # -- It defines the percentage of available cluster resources that you are willing to share with foreign clusters.
     resourceSharingPercentage: 30
@@ -53,7 +53,7 @@ route:
       limits: {}
       requests: {}
   # -- route image repository
-  imageName: "ghcr.io/leonardopoggiani/liqonet-ci:bb2c94fd436594c1bab56bec5121365209d65627"
+  imageName: "ghcr.io/liqotech/liqonet"
 
 gateway:
   # -- The number of gateway instances to run.
@@ -73,7 +73,7 @@ gateway:
       limits: {}
       requests: {}
   # -- gateway image repository
-  imageName: "ghcr.io/leonardopoggiani/liqonet-ci:bb2c94fd436594c1bab56bec5121365209d65627"
+  imageName: "ghcr.io/liqotech/liqonet"
   service:
     # -- If you plan to use liqo over the Internet, consider to change this field to "LoadBalancer".
     # Instead, if your nodes are directly reachable from the cluster you are peering to, you may change it to "NodePort".
@@ -114,7 +114,7 @@ networkManager:
       limits: {}
       requests: {}
   # -- networkManager image repository
-  imageName: "ghcr.io/leonardopoggiani/liqonet-ci:bb2c94fd436594c1bab56bec5121365209d65627"
+  imageName: "ghcr.io/liqotech/liqonet"
   config:
     # -- The subnet used by the cluster for the pods, in CIDR notation
     podCIDR: ""
@@ -279,9 +279,7 @@ webhook:
 
 virtualKubelet:
   # -- virtual kubelet image repository
-  # imageName: "ghcr.io/liqotech/virtual-kubelet"
-  imageName: "ghcr.io/leonardopoggiani/virtual-kubelet-ci:83872b7fa165b23d048ed0f1185c6d3fd659a570"
-
+  imageName: "ghcr.io/liqotech/virtual-kubelet"
   # add additional values for this fields to add to virtual kubelet deployments and pods
   extra:
     # -- virtual kubelet pod extra annotations
