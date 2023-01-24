@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package cachedclient contains utility methods to create a new controller runtime client with cache.
-package cachedclient
+// Package clients contains utility methods to create and manage clients with custom features.
+package clients
 
 import (
 	"context"

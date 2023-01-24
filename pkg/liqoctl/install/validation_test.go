@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -79,6 +79,11 @@ var _ = Describe("Validation", func() {
 
 			Entry("invalid 127.0.0.1 address", apiServerValidatorTestcase{
 				apiServerAddress: "https://127.0.0.1",
+				expectedOutput:   HaveOccurred(),
+			}),
+
+			Entry("invalid 0.0.0.0 address", apiServerValidatorTestcase{
+				apiServerAddress: "https://0.0.0.0",
 				expectedOutput:   HaveOccurred(),
 			}),
 		)

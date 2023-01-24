@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -377,10 +377,6 @@ var _ = Describe("Liqo E2E", func() {
 				Expect(err).ToNot(HaveOccurred())
 				v, err = client.ServerVersion()
 				Expect(err).ToNot(HaveOccurred())
-
-				if v.Major == "1" && v.Minor >= "24" {
-					Skip("Disabling the API server interaction test for kubernetes version >=1.24, as currently not supported")
-				}
 
 				options = k8s.NewKubectlOptions("", testContext.Clusters[0].KubeconfigPath, namespace)
 			})

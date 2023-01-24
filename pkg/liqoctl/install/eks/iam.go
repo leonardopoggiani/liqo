@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -200,7 +200,7 @@ func (o *Options) checkPolicy(iamSvc *iam.IAM) (string, error) {
 	}
 
 	if tmp != policyDocument {
-		return "", fmt.Errorf("the %v IAM policy has not the permission required by Liqo",
+		return "", fmt.Errorf("the %v IAM policy has not the permission required by Liqo, try deleting or updating it",
 			o.iamUser.policyName)
 	}
 

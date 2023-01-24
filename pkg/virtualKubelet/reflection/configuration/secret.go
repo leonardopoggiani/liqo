@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -91,6 +91,12 @@ func (nsr *NamespacedSecretReflector) Handle(ctx context.Context, name string) e
 	if !nsr.enableSAReflection && lerr == nil && local.Type == corev1.SecretTypeServiceAccountToken {
 		klog.Infof("Skipping reflection of local Secret %q because of type %s", nsr.LocalRef(name), corev1.SecretTypeServiceAccountToken)
 		nsr.Event(local, corev1.EventTypeNormal, forge.EventReflectionDisabled, forge.EventSAReflectionDisabledMsg())
+		return nil
+	}
+
+	// Skip secrets containing service account tokens, as managed by the dedicated reflector.
+	if rerr == nil && forge.IsServiceAccountSecret(remote) {
+		klog.Infof("Skipping reflection of remote Secret %q as containing service account tokens", nsr.LocalRef(name))
 		return nil
 	}
 

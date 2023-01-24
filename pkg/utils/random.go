@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,10 @@
 
 package utils
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
@@ -25,4 +28,9 @@ func RandomString(n int) string {
 		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))] //nolint:gosec // don't need crypto/rand
 	}
 	return string(b)
+}
+
+// RandomJitter returns a duration between duration and duration + maxJitter.
+func RandomJitter(duration, maxJitter time.Duration) time.Duration {
+	return (duration + time.Duration(rand.Float64()*float64(maxJitter))).Truncate(time.Millisecond) //nolint:gosec // don't need crypto/rand
 }

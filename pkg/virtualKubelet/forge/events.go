@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,12 @@ const (
 
 	// EventReflectionDisabled -> the reason for the event when reflection is disabled for the given namespace/object.
 	EventReflectionDisabled = "ReflectionDisabled"
+
+	// EventSuccessfulSATokensReflection -> the reason for the event when the reflection of service account tokens completes successfully.
+	EventSuccessfulSATokensReflection = "SuccessfulSATokensReflection"
+
+	// EventFailedSATokensReflection -> the reason for the event when the reflection of service account tokens fails.
+	EventFailedSATokensReflection = "FailedSATokensReflection"
 )
 
 // EventSuccessfulReflectionMsg returns the message for the event when the outgoing reflection completes successfully.

@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,7 +72,7 @@ var _ = Describe("Namespaced Pod Reflection Tests", func() {
 
 			broadcaster := record.NewBroadcaster()
 			metricsFactory := func(string) metricsv1beta1.PodMetricsInterface { return nil }
-			rfl := workload.NewPodReflector(nil, metricsFactory, ipam, true, 0)
+			rfl := workload.NewPodReflector(nil, metricsFactory, ipam, forge.APIServerSupportTokenAPI, 0)
 			rfl.Start(ctx, options.New(client, factory.Core().V1().Pods()).WithEventBroadcaster(broadcaster))
 			reflector = rfl.NewNamespaced(options.NewNamespaced().
 				WithLocal(LocalNamespace, client, factory).WithLiqoLocal(liqoClient, liqoFactory).
@@ -208,7 +208,7 @@ var _ = Describe("Namespaced Pod Reflection Tests", func() {
 						Expect(shadowAfter.Labels).To(HaveKeyWithValue(forge.LiqoDestinationClusterIDKey, RemoteClusterID))
 						Expect(shadowAfter.Labels).To(HaveKeyWithValue("foo", "bar"))
 						Expect(shadowAfter.Annotations).To(HaveKeyWithValue("bar", "baz"))
-						Expect(shadowAfter.Annotations).To(HaveKeyWithValue("existing", "existing"))
+						Expect(shadowAfter.Annotations).NotTo(HaveKeyWithValue("existing", "existing"))
 					})
 					It("the spec should not have been replicated to the remote object, to prevent possible issues", func() {
 						shadowAfter := GetShadowPod(liqoClient, RemoteNamespace, PodName)
@@ -220,7 +220,7 @@ var _ = Describe("Namespaced Pod Reflection Tests", func() {
 				When("the remote object already exists and is correct", func() {
 					BeforeEach(func() {
 						shadow.SetLabels(labels.Merge(map[string]string{"foo": "bar"}, forge.ReflectionLabels()))
-						shadow.SetAnnotations(map[string]string{"bar": "baz", "existing": "existing"})
+						shadow.SetAnnotations(map[string]string{"bar": "baz"})
 						shadow.Spec.Pod.Containers = []corev1.Container{{Name: "bar", Image: "foo"}}
 
 						// Here, we create a modified fake client which returns an error when trying to perform an update operation.
@@ -439,7 +439,7 @@ var _ = Describe("Namespaced Pod Reflection Tests", func() {
 			BeforeEach(func() { input = "service-account"; podinfo = workload.PodInfo{} })
 
 			JustBeforeEach(func() {
-				output, err = reflector.(*workload.NamespacedPodReflector).RetrieveServiceAccountSecretName(&podinfo, input)
+				output, err = reflector.(*workload.NamespacedPodReflector).RetrieveLegacyServiceAccountSecretName(&podinfo, input)
 			})
 
 			When("no secret is associated with the given service account", func() {

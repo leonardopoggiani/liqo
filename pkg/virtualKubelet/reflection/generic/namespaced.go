@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -82,11 +82,11 @@ func (gnr *NamespacedReflector) RemoteRef(name string) klog.ObjectRef {
 func (gnr *NamespacedReflector) DeleteRemote(ctx context.Context, deleter ResourceDeleter, resource, name string, uid types.UID) error {
 	err := deleter.Delete(ctx, name, *metav1.NewPreconditionDeleteOptions(string(uid)))
 	if err != nil && !kerrors.IsNotFound(err) {
-		klog.Errorf("Failed to delete remote %v %q (local: %q): %v", resource, gnr.RemoteRef(name), gnr.LocalRef(name), err)
+		klog.Errorf("Failed to delete remote %v %q: %v", resource, gnr.RemoteRef(name), err)
 		return err
 	}
 
-	klog.Infof("Remote %v %q successfully deleted (local: %q)", resource, gnr.RemoteRef(name), gnr.LocalRef(name))
+	klog.Infof("Remote %v %q successfully deleted", resource, gnr.RemoteRef(name))
 	return nil
 }
 

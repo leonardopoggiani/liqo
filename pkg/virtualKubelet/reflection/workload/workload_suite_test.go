@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ var _ = BeforeEach(func() {
 })
 var _ = AfterEach(func() { cancel() })
 
-var FakeEventHandler = func(options.Keyer) cache.ResourceEventHandler {
+var FakeEventHandler = func(options.Keyer, ...options.EventFilter) cache.ResourceEventHandler {
 	return cache.ResourceEventHandlerFuncs{
 		AddFunc:    func(_ interface{}) {},
 		UpdateFunc: func(_, obj interface{}) {},

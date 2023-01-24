@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ import (
 	liqolabels "github.com/liqotech/liqo/pkg/utils/labels"
 )
 
-// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update
-// +kubebuilder:rbac:groups=core,resources=services,verbs=list;watch;update
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;update;patch
+// +kubebuilder:rbac:groups=core,resources=services,verbs=list;watch;update;patch
 
 const (
 	// These labels are the ones set during the deployment of liqo using the helm chart.

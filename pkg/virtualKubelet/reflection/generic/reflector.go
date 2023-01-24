@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ package generic
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -25,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
 	"k8s.io/klog/v2"
@@ -188,6 +190,13 @@ func (gr *reflector) processNextWorkItem() bool {
 
 	// Run the handler, passing it the item to be processed as parameter.
 	if err := gr.handle(context.Background(), key.(types.NamespacedName)); err != nil {
+		var eae enqueueAfterError
+		if errors.As(err, &eae) {
+			// Put the item back on the workqueue after the given duration elapsed.
+			gr.workqueue.AddAfter(key, eae.duration)
+			return true
+		}
+
 		// Put the item back on the workqueue to handle any transient errors.
 		gr.workqueue.AddRateLimited(key)
 		return true
@@ -235,21 +244,30 @@ func (gr *reflector) handle(ctx context.Context, key types.NamespacedName) error
 }
 
 // handle dispatches the items to be reconciled based on the resource type and namespace.
-func (gr *reflector) handlers(keyer options.Keyer) cache.ResourceEventHandler {
-	eh := func(obj interface{}) {
+func (gr *reflector) handlers(keyer options.Keyer, filters ...options.EventFilter) cache.ResourceEventHandler {
+	eh := func(ev watch.EventType, obj interface{}) {
 		metadata, err := meta.Accessor(obj)
 		utilruntime.Must(err)
 
+		for _, filter := range filters {
+			if filter(ev) {
+				klog.V(5).Infof("Skipping reconciliation of object %q through the %v reflector, as event %q is filtered out",
+					klog.KRef(metadata.GetNamespace(), metadata.GetName()), gr.name, ev)
+				return
+			}
+		}
+
 		for _, key := range keyer(metadata) {
-			klog.V(5).Infof("Enqueuing %v %q for reconciliation", gr.name, klog.KRef(metadata.GetNamespace(), metadata.GetName()))
+			klog.V(5).Infof("Enqueuing %q for reconciliation with key %q through the %v reflector",
+				klog.KRef(metadata.GetNamespace(), metadata.GetName()), key, gr.name)
 			gr.workqueue.Add(key)
 		}
 	}
 
 	return cache.ResourceEventHandlerFuncs{
-		AddFunc:    eh,
-		UpdateFunc: func(_, obj interface{}) { eh(obj) },
-		DeleteFunc: eh,
+		AddFunc:    func(obj interface{}) { eh(watch.Added, obj) },
+		UpdateFunc: func(_, obj interface{}) { eh(watch.Modified, obj) },
+		DeleteFunc: func(obj interface{}) { eh(watch.Deleted, obj) },
 	}
 }
 
@@ -290,4 +308,19 @@ func (dr *dummyreflector) StartNamespace(opts *options.NamespacedOpts) {
 func (dr *dummyreflector) StopNamespace(local, remote string) {
 	klog.Infof("Skipping stopping the %v reflection between local namespace %q and remote namespace %q, as no workers are configured",
 		dr.name, local, remote)
+}
+
+// EnqueueAfter returns an error to convey that the current key should be reenqueued after a given duration.
+func EnqueueAfter(interval time.Duration) error {
+	return enqueueAfterError{duration: interval}
+}
+
+// enqueueAfterError is an error used to convey that the current key should be reenqueued after a given duration.
+type enqueueAfterError struct {
+	duration time.Duration
+}
+
+// Error implements the Error interface.
+func (e enqueueAfterError) Error() string {
+	return fmt.Sprintf("requested to enqueue element for reconciliation after %v", e.duration)
 }

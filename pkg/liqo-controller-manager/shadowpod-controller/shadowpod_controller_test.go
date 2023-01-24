@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -122,10 +122,22 @@ var _ = Describe("Reconcile", func() {
 			Expect(k8sClient.Create(ctx, &testPod)).To(Succeed())
 		})
 
-		It("should ignore it", func() {
+		It("should align pod and shadowpod", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(res).To(BeZero())
-			Expect(buffer.String()).To(ContainSubstring("skip: pod \"default/test-shadow-pod\" already running"))
+			Expect(buffer.String()).To(ContainSubstring(fmt.Sprintf("pod %q found running, will update it with", klog.KObj(&testPod))))
+		})
+
+		It("should update pod metadata to shadowpod metadata", func() {
+			pod := corev1.Pod{}
+			Expect(k8sClient.Get(ctx, req.NamespacedName, &pod)).To(Succeed())
+			Expect(pod.GetName()).To(Equal(testShadowPod.GetName()))
+			Expect(pod.GetAnnotations()).To(Equal(testShadowPod.GetAnnotations()))
+
+			for key, value := range testShadowPod.GetLabels() {
+				Expect(pod.GetLabels()).To(HaveKeyWithValue(key, value))
+			}
+			Expect(pod.GetLabels()).To(HaveKeyWithValue(consts.ManagedByLabelKey, consts.ManagedByShadowPodValue))
 		})
 	})
 

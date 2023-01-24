@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ import (
 
 	"github.com/liqotech/liqo/pkg/consts"
 	"github.com/liqotech/liqo/pkg/remotemetrics"
-	cachedclient "github.com/liqotech/liqo/pkg/utils/cachedClient"
+	clientutils "github.com/liqotech/liqo/pkg/utils/clients"
 	"github.com/liqotech/liqo/pkg/utils/mapper"
 	"github.com/liqotech/liqo/pkg/utils/restcfg"
 )
@@ -81,7 +81,7 @@ func main() {
 		klog.Fatalf("error creating cache: %s", err)
 	}
 
-	cl, err := cachedclient.GetCachedClientWithConfig(ctx, scheme, config, clientCache)
+	cl, err := clientutils.GetCachedClientWithConfig(ctx, scheme, config, clientCache)
 	if err != nil {
 		klog.Fatal(err)
 	}

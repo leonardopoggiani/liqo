@@ -1,4 +1,4 @@
-// Copyright 2019-2022 The Liqo Authors
+// Copyright 2019-2023 The Liqo Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,20 +22,6 @@ import (
 	netv1alpha1 "github.com/liqotech/liqo/apis/net/v1alpha1"
 	"github.com/liqotech/liqo/pkg/consts"
 )
-
-// FakeHelmValues returns a fake helm values map.
-func FakeHelmValues() map[string]interface{} {
-	return map[string]interface{}{
-		"apiServer": map[string]interface{}{
-			"address": APIAddress,
-		},
-		"discovery": map[string]interface{}{
-			"config": map[string]interface{}{
-				"clusterLabels": ClusterLabels,
-			},
-		},
-	}
-}
 
 // FakeClusterIDConfigMap returns a fake ClusterID ConfigMap.
 func FakeClusterIDConfigMap(namespace, clusterID, clusterName string) *corev1.ConfigMap {
