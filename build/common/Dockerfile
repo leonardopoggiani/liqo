@@ -5,7 +5,7 @@ COPY go.mod ./go.mod
 COPY go.sum ./go.sum
 RUN  go mod download
 
-ARG COMPONENT
+ARG COMPONENT=discovery
 RUN test -n "$COMPONENT" || ( echo "The COMPONENT argument is unset. Aborting" && false )
 
 COPY . ./
@@ -19,7 +19,7 @@ RUN apk update && \
     update-ca-certificates && \
     rm -rf /var/cache/apk/*
 
-ARG COMPONENT
+ARG COMPONENT=discovery
 COPY --from=builder /tmp/builder/$COMPONENT /usr/bin/$COMPONENT
 RUN ln -s /usr/bin/$COMPONENT /usr/bin/liqo-component
 
