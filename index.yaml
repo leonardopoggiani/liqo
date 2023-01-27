@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  liqo:
+  - apiVersion: v2
+    appVersion: 1.16.0
+    created: "2023-01-27T16:52:25.166732508Z"
+    description: A Helm chart for Kubernetes
+    digest: 0d20e6a863a2e18cf0e3b485555d8a258d2d14395aedfc7c3387779a50540ff0
+    name: liqo
+    type: application
+    urls:
+    - https://github.com/leonardopoggiani/liqo.git/liqo-0.1.0.tgz
+    version: 0.1.0
+generated: "2023-01-27T16:52:25.165142735Z"
