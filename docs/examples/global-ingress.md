@@ -85,7 +85,7 @@ The output should be similar to:
 
 ```text
 NAME           STATUS   ROLES   AGE   VERSION
-liqo-gslb-us   Ready    agent   17s   v1.22.6+k3s1
+liqo-gslb-us   Ready    agent   14s   v1.25.0+k3s1
 ```
 
 ## Deploy an application
@@ -319,6 +319,8 @@ In addition to the *RoundRobin* policy, which provides load distribution among c
 Additional details are provided in its [official documentation](https://www.k8gb.io/docs/strategy.html).
 
 ## Tear down the playground
+
+Our example is finished; now we can remove all the created resources and tear down the playground.
 
 ### Unoffload namespaces
 

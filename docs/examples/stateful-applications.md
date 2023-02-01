@@ -114,7 +114,7 @@ kubectl run db-mariadb-galera-client --rm --tty -i \
     --restart='Never' --namespace default \
     --image docker.io/bitnami/mariadb-galera:10.6.7-debian-10-r56 \
     --command \
-      -- mysql -h db-mariadb-galera.liqo-demo -uuser -ppassword my_database
+    -- mysql -h db-mariadb-galera.liqo-demo -uuser -ppassword my_database
 ```
 
 And then create an example table and insert some data:
@@ -181,6 +181,8 @@ You can run exactly the same commands to query the data from the other cluster, 
 ```
 
 ## Tear down the playground
+
+Our example is finished; now we can remove all the created resources and tear down the playground.
 
 ### Unoffload namespaces
 

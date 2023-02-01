@@ -99,8 +99,8 @@ kubectl get services --namespace liqo-demo --kubeconfig "$KUBECONFIG_NEWYORK"
 ```
 
 ```text
-NAME              TYPE        CLUSTER-IP    EXTERNAL-IP   PORT(S)    AGE   SELECTOR
-flights-service   ClusterIP   10.95.177.4   <none>        7999/TCP   14s   run=flights-service
+NAME              TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)    AGE
+flights-service   ClusterIP   10.81.139.132   <none>        7999/TCP   14s
 ```
 
 The Service is characterized by a different *ClusterIP* address in the two clusters, since each cluster handles it independently.
@@ -144,6 +144,8 @@ curl -s -H 'accept: application/json' http://flights-service.liqo-demo:7999/sche
 This quick example demonstrated how Liqo can **upgrade *ClusterIP* Services to multi-cluster Services**, allowing your local pods to transparently serve traffic originating from remote clusters with no additional configuration neither in the local cluster and/or applications nor in the remote ones.
 
 ## Tear down the playground
+
+Our example is finished; now we can remove all the created resources and tear down the playground.
 
 ### Unoffload namespaces
 
