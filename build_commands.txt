@@ -1,0 +1,9 @@
+docker build . --tag ghcr.io/leonardopoggiani/virtual-kubelet:latest
+
+docker push ghcr.io/leonardopoggiani/virtual-kubelet:latest
+
+kubectl describe pods virtual-kubelet-6cd848fdf9-h62wx -n liqo-tenant-milan-7ee780
+
+kubectl rollout restart deployment -n liqo-tenant-milan-7ee780 virtual-kubelet 
+
+kubectl edit pods virtual-kubelet-54bf79f5d-tb8t2 -n liqo-tenant-milan-7ee780
