@@ -74,7 +74,8 @@ jobs:
       fail-fast: false
       matrix:
         component:
-        - liqonet
+          - liqonet
+          - virtual-kubelet
     steps:
 
       - name: Set up QEMU

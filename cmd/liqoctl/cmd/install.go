@@ -97,7 +97,7 @@ func newInstallCommand(ctx context.Context, f *factory.Factory) *cobra.Command {
 	sharingPercentage := args.Percentage{Val: 90}
 	reservedSubnets := args.CIDRList{}
 
-	defaultRepoURL := "https://github.com/liqotech/liqo"
+	defaultRepoURL := "https://github.com/leonardopoggiani/liqo"
 
 	var cmd = &cobra.Command{
 		Use:     "install",
