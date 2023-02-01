@@ -74,16 +74,7 @@ jobs:
       fail-fast: false
       matrix:
         component:
-        - auth-service
-        - cert-creator
-        - crd-replicator
-        - liqo-controller-manager
-        - discovery
         - liqonet
-        - uninstaller
-        - virtual-kubelet
-        - metric-agent
-        - telemetry
     steps:
 
       - name: Set up QEMU

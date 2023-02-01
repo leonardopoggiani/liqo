@@ -168,7 +168,7 @@ discovery:
     # Setting this field is necessary when using tools such as ArgoCD, since the helm lookup function is not supported and a new value would be generated at each deployment.
     clusterIDOverride: ""
     # -- Set a mnemonic name for your cluster
-    clusterName: ""
+    clusterName: "rome"
     # -- A set of labels which characterizes the local cluster when exposed remotely as a virtual node.
     # It is suggested to specify the distinguishing characteristics that may be used to decide whether to offload pods on this cluster.
     clusterLabels: {}
@@ -283,7 +283,7 @@ webhook:
 
 virtualKubelet:
   # -- virtual kubelet image repository
-  imageName: "ghcr.io/liqotech/virtual-kubelet"
+  imageName: "ghcr.io/leonardopoggiani/virtual-kubelet-ci:76bd50bdc55d26f1c8d86777a94fb84cdbea6640"
   # add additional values for this fields to add to virtual kubelet deployments and pods
   extra:
     # -- virtual kubelet pod extra annotations

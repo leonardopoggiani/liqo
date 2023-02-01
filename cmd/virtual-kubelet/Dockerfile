@@ -1,18 +1,26 @@
-FROM golang:1.19 AS builder
+FROM golang:1.19 as builder
+WORKDIR /home/poggio/Documenti/Github/liqo/cmd/
 
-ENV GO111MODULE=on
+COPY go.mod ./go.mod
+COPY go.sum ./go.sum
+RUN  go mod download
 
-WORKDIR /go/src/liqo.io/
+ARG COMPONENT="virtual-kubelet"
+RUN test -n "$COMPONENT" || ( echo "The COMPONENT argument is unset. Aborting" && false )
 
-COPY go.mod go.sum ./
-RUN go mod download
-COPY . .
+COPY . ./
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=$(go env GOARCH) go build -ldflags="-s -w" .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -o virtual-kubelet .
 
 FROM alpine:3.15
 
-COPY --from=builder /go/src/liqo.io/virtual-kubelet .
+RUN apk update && \
+    apk add --no-cache ca-certificates && \
+    update-ca-certificates && \
+    rm -rf /var/cache/apk/*
 
-ENTRYPOINT ["./virtual-kubelet"]
+ARG COMPONENT="virtual-kubelet"
+COPY --from=builder /home/poggio/Documenti/Github/liqo/cmd/$COMPONENT /usr/bin/$COMPONENT
+RUN ln -s /usr/bin/$COMPONENT /usr/bin/liqo-component
 
+ENTRYPOINT [ "/usr/bin/liqo-component" ]
