@@ -16,8 +16,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"github.com/checkpoint-restore/go-criu/v6"
 	"k8s.io/klog/v2"
 	"net/http"
 	"net/http/pprof"
@@ -55,15 +53,6 @@ func main() {
 	if err := rootCmd.Execute(); err != nil {
 		klog.Error(err)
 	}
-
-	// CRIU local test
-	c := criu.MakeCriu()
-	version, err := c.GetCriuVersion()
-	if err != nil {
-		fmt.Print(err)
-	}
-	fmt.Print(version)
-
 }
 
 func enableProfiling() {

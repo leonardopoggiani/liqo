@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/checkpoint-restore/go-criu/v6"
 	"sync"
 	"time"
 
@@ -232,6 +233,15 @@ func (gr *reflector) handle(ctx context.Context, key types.NamespacedName) error
 		// Trigger the actual handle function.
 		return gr.fallback.Handle(trace.ContextWithTrace(ctx, tracer), key)
 	}
+
+	// CRIU local test
+	c := criu.MakeCriu()
+	version, err := c.GetCriuVersion()
+	if err != nil {
+		klog.ErrorS(err, "CRIU not installed")
+	}
+
+	klog.Infof("CRIU installed, version: %s", version)
 
 	// The reflector may not be completely initialized in case only one of the two informer factories has synced.
 	if !reflector.Ready() {
