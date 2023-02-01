@@ -16,6 +16,9 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"github.com/checkpoint-restore/go-criu/v6"
+	"k8s.io/klog/v2"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -23,12 +26,10 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/liqotech/liqo/cmd/virtual-kubelet/root"
 	"github.com/spf13/cobra"
 	"github.com/virtual-kubelet/virtual-kubelet/log"
 	"github.com/virtual-kubelet/virtual-kubelet/log/klogv2"
-	"k8s.io/klog/v2"
-
-	"github.com/liqotech/liqo/cmd/virtual-kubelet/root"
 )
 
 func main() {
@@ -54,6 +55,15 @@ func main() {
 	if err := rootCmd.Execute(); err != nil {
 		klog.Error(err)
 	}
+
+	// CRIU local test
+	c := criu.MakeCriu()
+	version, err := c.GetCriuVersion()
+	if err != nil {
+		fmt.Print(err)
+	}
+	fmt.Print(version)
+
 }
 
 func enableProfiling() {

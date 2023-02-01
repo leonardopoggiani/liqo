@@ -42,3 +42,14 @@ liqo_kubeconf*
 
 hack/code-generator
 docs/_build
+
+# local development
+cmd/liqo-controller-manager/liqo-controller-manager
+cmd/auth-service/auth-service
+cmd/crd-replicator/crd-replicator
+cmd/discovery/discovery
+cmd/liqoctl/liqoctl
+cmd/liqonet/liqonet
+cmd/metric-agent/metric-agent
+cmd/uninstaller/uninstaller
+cmd/virtual-kubelet/virtual-kubelet

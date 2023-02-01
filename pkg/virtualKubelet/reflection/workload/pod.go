@@ -18,11 +18,12 @@ import (
 	"context"
 	"errors"
 	"io"
+	"k8s.io/klog/v2"
 	"os"
 	"sync"
 
-	"github.com/virtual-kubelet/virtu`al-kubelet/node/api/statsv1alpha1"
 	"github.com/virtual-kubelet/virtual-kubelet/node/api"
+	"github.com/virtual-kubelet/virtual-kubelet/node/api/statsv1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	kerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -96,9 +97,9 @@ type FallbackPodReflector struct {
 
 // NewPodReflector returns a new PodReflector instance.
 func NewPodReflector(
-	remoteRESTConfig *rest.Config,               /* required to establish the connection to implement `kubectl exec` */
-	remoteMetricsFactory MetricsFactory,         /* required to retrieve the pod metrics from the remote cluster */
-	ipamclient ipam.IpamClient,                  /* required to translate the remote IP addresses to the corresponding local ones */
+	remoteRESTConfig *rest.Config, /* required to establish the connection to implement `kubectl exec` */
+	remoteMetricsFactory MetricsFactory, /* required to retrieve the pod metrics from the remote cluster */
+	ipamclient ipam.IpamClient, /* required to translate the remote IP addresses to the corresponding local ones */
 	apiServerSupport forge.APIServerSupportType, /* how to forge the fields required to allow offloaded pods to contact the local API server */
 	workers uint) *PodReflector {
 	reflector := &PodReflector{

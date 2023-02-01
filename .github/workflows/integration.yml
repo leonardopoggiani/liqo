@@ -74,7 +74,6 @@ jobs:
       fail-fast: false
       matrix:
         component:
-          - liqonet
           - virtual-kubelet
     steps:
 
