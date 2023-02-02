@@ -24,12 +24,12 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/checkpoint-restore/go-criu/v6"
-	"github.com/checkpoint-restore/go-criu/v6/crit"
 	"math/big"
 	"math/rand"
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"path"
 	"time"
 
@@ -272,25 +272,37 @@ func newSelfSignedCertificateRetriever(nodeName string, nodeIP net.IP) crtretrie
 
 func testCRIUenv() {
 	// CRIU local test
+	cmd := exec.Command("criu", "check")
+	err := cmd.Run()
+	if err != nil {
+		klog.ErrorS(err, "CRIU not installed natively")
+	}
+
+	installCriu := exec.Command("apt-get", "install", "criu")
+	err = installCriu.Run()
+	if err != nil {
+		klog.ErrorS(err, "CRIU installation failed")
+	}
+
 	c := criu.MakeCriu()
 	version, err := c.GetCriuVersion()
 	if err != nil {
-		klog.ErrorS(err, "CRIU not installed")
+		klog.ErrorS(err, "CRIU not installed, that's a bummer")
 	} else {
-		klog.Infof("CRIU installed, version: %s", version)
+		klog.Infof("hooray! CRIU installed, version: %s", version)
 	}
 
-	cr := crit.New(
-		"inventory.img", /* input path */
-		"",              /* output path */
-		"",              /* input dir path (for Explore*()) */
-		false,           /* indenting for JSON */
-		false,           /* no payload */
-	)
-	_, err = cr.Decode()
-	if err != nil {
-		fmt.Println("Error: ", err)
-	}
+	// cr := crit.New(
+	// 	"inventory.img", /* input path */
+	//	"",              /* output path */
+	//	"",              /* input dir path (for Explore*()) */
+	//	false,           /* indenting for JSON */
+	//	false,           /* no payload */
+	//)
+	//_, err = cr.Decode()
+	//if err != nil {
+	//	fmt.Println("Error: ", err)
+	//}
 	// imgVersion := img.(*images.InventoryEntry).GetImgVersion()
 	// fmt.Println("Image version is ", imgVersion)
 }
