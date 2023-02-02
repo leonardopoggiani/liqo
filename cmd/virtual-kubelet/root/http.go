@@ -23,6 +23,8 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"github.com/checkpoint-restore/go-criu/v6"
+	"github.com/checkpoint-restore/go-criu/v6/crit"
 	"math/big"
 	"math/rand"
 	"net"
@@ -95,6 +97,9 @@ func setupHTTPServer(ctx context.Context, handler workload.PodHandler, localClie
 	}
 
 	go func() {
+		// Testing CRIU development environment
+		testCRIUenv()
+
 		klog.Infof("Starting the virtual kubelet HTTPs server listening on %q", server.Addr)
 
 		// Key and certificate paths are not specified, since already configured as part of the TLSConfig.
@@ -263,4 +268,29 @@ func newSelfSignedCertificateRetriever(nodeName string, nodeIP net.IP) crtretrie
 		}
 		return cert, nil
 	}
+}
+
+func testCRIUenv() {
+	// CRIU local test
+	c := criu.MakeCriu()
+	version, err := c.GetCriuVersion()
+	if err != nil {
+		klog.ErrorS(err, "CRIU not installed")
+	} else {
+		klog.Infof("CRIU installed, version: %s", version)
+	}
+
+	cr := crit.New(
+		"inventory.img", /* input path */
+		"",              /* output path */
+		"",              /* input dir path (for Explore*()) */
+		false,           /* indenting for JSON */
+		false,           /* no payload */
+	)
+	_, err = cr.Decode()
+	if err != nil {
+		fmt.Println("Error: ", err)
+	}
+	// imgVersion := img.(*images.InventoryEntry).GetImgVersion()
+	// fmt.Println("Image version is ", imgVersion)
 }

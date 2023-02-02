@@ -3,9 +3,9 @@
 # Declare variables to be passed into your templates.
 
 # -- Images' tag to select a development version of liqo instead of a release
-tag: ""
+tag: "latest"
 # -- The pullPolicy for liqo pods
-pullPolicy: "IfNotPresent"
+pullPolicy: "Always"
 apiServer:
   # -- The address that must be used to contact your API server, it needs to be reachable from the clusters that you will peer with (defaults to your master IP)
   address: ""
