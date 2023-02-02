@@ -24,13 +24,16 @@ import (
 	"encoding/pem"
 	"fmt"
 	"github.com/checkpoint-restore/go-criu/v6"
+	"github.com/checkpoint-restore/go-criu/v6/rpc"
+	"google.golang.org/protobuf/proto"
+	"log"
 	"math/big"
 	"math/rand"
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"path"
+	"strconv"
 	"time"
 
 	"github.com/virtual-kubelet/virtual-kubelet/node/api"
@@ -271,19 +274,8 @@ func newSelfSignedCertificateRetriever(nodeName string, nodeIP net.IP) crtretrie
 }
 
 func testCRIUenv() {
+
 	// CRIU local test
-	cmd := exec.Command("criu", "check")
-	err := cmd.Run()
-	if err != nil {
-		klog.ErrorS(err, "CRIU not installed natively")
-	}
-
-	installCriu := exec.Command("apt-get", "install", "criu")
-	err = installCriu.Run()
-	if err != nil {
-		klog.ErrorS(err, "CRIU installation failed")
-	}
-
 	c := criu.MakeCriu()
 	version, err := c.GetCriuVersion()
 	if err != nil {
@@ -292,17 +284,62 @@ func testCRIUenv() {
 		klog.Infof("hooray! CRIU installed, version: %s", version)
 	}
 
-	// cr := crit.New(
-	// 	"inventory.img", /* input path */
-	//	"",              /* output path */
-	//	"",              /* input dir path (for Explore*()) */
-	//	false,           /* indenting for JSON */
-	//	false,           /* no payload */
-	//)
-	//_, err = cr.Decode()
-	//if err != nil {
-	//	fmt.Println("Error: ", err)
-	//}
-	// imgVersion := img.(*images.InventoryEntry).GetImgVersion()
-	// fmt.Println("Image version is ", imgVersion)
+	// make the actual dump
+	err = doDump(c, "1", "/tmp/criu", false, "")
+	if err != nil {
+		return
+	}
+}
+
+func doDump(c *criu.Criu, pidS string, imgDir string, pre bool, prevImg string) error {
+	log.Println("Dumping")
+	pid, err := strconv.ParseInt(pidS, 10, 32)
+	if err != nil {
+		return fmt.Errorf("can't parse pid: %w", err)
+	}
+	img, err := os.Open(imgDir)
+	if err != nil {
+		return fmt.Errorf("can't open image dir: %w", err)
+	}
+
+	defer func(img *os.File) {
+		err := img.Close()
+		if err != nil {
+
+		}
+	}(img)
+
+	opts := &rpc.CriuOpts{
+		Pid:         proto.Int32(int32(pid)),
+		ImagesDirFd: proto.Int32(int32(img.Fd())),
+		LogLevel:    proto.Int32(4),
+		LogFile:     proto.String("dump.log"),
+	}
+
+	if prevImg != "" {
+		opts.ParentImg = proto.String(prevImg)
+		opts.TrackMem = proto.Bool(true)
+	}
+
+	if pre {
+		err = c.PreDump(opts, TestNfy{})
+	} else {
+		err = c.Dump(opts, TestNfy{})
+	}
+	if err != nil {
+		return fmt.Errorf("dump fail: %w", err)
+	}
+
+	return nil
+}
+
+// TestNfy struct
+type TestNfy struct {
+	criu.NoNotify
+}
+
+// PreDump test function
+func (c TestNfy) PreDump() error {
+	log.Println("TEST PRE DUMP")
+	return nil
 }

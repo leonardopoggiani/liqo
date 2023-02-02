@@ -5,7 +5,7 @@
 # -- Images' tag to select a development version of liqo instead of a release
 tag: "latest"
 # -- The pullPolicy for liqo pods
-
+pullPolicy: "Always"
 apiServer:
   # -- The address that must be used to contact your API server, it needs to be reachable from the clusters that you will peer with (defaults to your master IP)
   address: ""
@@ -283,8 +283,9 @@ webhook:
 
 virtualKubelet:
   # -- virtual kubelet image repository
-  pullPolicy: "Always"
   imageName: "ghcr.io/liqotech/virtual-kubelet"
+  pullPolicy: "Always"
+
   # add additional values for this fields to add to virtual kubelet deployments and pods
   extra:
     # -- virtual kubelet pod extra annotations

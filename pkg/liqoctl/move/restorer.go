@@ -67,7 +67,7 @@ func (o *Options) createRestorerJob(ctx context.Context,
 						{
 							Name:            "restic",
 							Image:           resticImage,
-							ImagePullPolicy: corev1.PullIfNotPresent,
+							ImagePullPolicy: corev1.PullAlways,
 							Args: []string{
 								"-r",
 								fmt.Sprintf("%s%s", resticRepositoryURL, oldPvc.GetUID()),
