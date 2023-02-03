@@ -23,17 +23,12 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"github.com/checkpoint-restore/go-criu/v6"
-	"github.com/checkpoint-restore/go-criu/v6/rpc"
-	"google.golang.org/protobuf/proto"
-	"log"
 	"math/big"
 	"math/rand"
 	"net"
 	"net/http"
 	"os"
 	"path"
-	"strconv"
 	"time"
 
 	"github.com/virtual-kubelet/virtual-kubelet/node/api"
@@ -100,9 +95,6 @@ func setupHTTPServer(ctx context.Context, handler workload.PodHandler, localClie
 	}
 
 	go func() {
-		// Testing CRIU development environment
-		testCRIUenv()
-
 		klog.Infof("Starting the virtual kubelet HTTPs server listening on %q", server.Addr)
 
 		// Key and certificate paths are not specified, since already configured as part of the TLSConfig.
@@ -271,75 +263,4 @@ func newSelfSignedCertificateRetriever(nodeName string, nodeIP net.IP) crtretrie
 		}
 		return cert, nil
 	}
-}
-
-func testCRIUenv() {
-
-	// CRIU local test
-	c := criu.MakeCriu()
-	version, err := c.GetCriuVersion()
-	if err != nil {
-		klog.ErrorS(err, "CRIU not installed, that's a bummer")
-	} else {
-		klog.Infof("hooray! CRIU installed, version: %s", version)
-	}
-
-	// make the actual dump
-	err = doDump(c, "1", "/tmp/criu", false, "")
-	if err != nil {
-		return
-	}
-}
-
-func doDump(c *criu.Criu, pidS string, imgDir string, pre bool, prevImg string) error {
-	log.Println("Dumping")
-	pid, err := strconv.ParseInt(pidS, 10, 32)
-	if err != nil {
-		return fmt.Errorf("can't parse pid: %w", err)
-	}
-	img, err := os.Open(imgDir)
-	if err != nil {
-		return fmt.Errorf("can't open image dir: %w", err)
-	}
-
-	defer func(img *os.File) {
-		err := img.Close()
-		if err != nil {
-
-		}
-	}(img)
-
-	opts := &rpc.CriuOpts{
-		Pid:         proto.Int32(int32(pid)),
-		ImagesDirFd: proto.Int32(int32(img.Fd())),
-		LogLevel:    proto.Int32(4),
-		LogFile:     proto.String("dump.log"),
-	}
-
-	if prevImg != "" {
-		opts.ParentImg = proto.String(prevImg)
-		opts.TrackMem = proto.Bool(true)
-	}
-
-	if pre {
-		err = c.PreDump(opts, TestNfy{})
-	} else {
-		err = c.Dump(opts, TestNfy{})
-	}
-	if err != nil {
-		return fmt.Errorf("dump fail: %w", err)
-	}
-
-	return nil
-}
-
-// TestNfy struct
-type TestNfy struct {
-	criu.NoNotify
-}
-
-// PreDump test function
-func (c TestNfy) PreDump() error {
-	log.Println("TEST PRE DUMP")
-	return nil
 }

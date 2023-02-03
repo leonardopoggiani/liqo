@@ -1,0 +1,399 @@
+func (in instrumentedRuntimeService) CheckpointContainer(containerID string, options *runtimeapi.CheckpointContainerOptions) error {
+	const operation = "checkpoint_container"
+	defer recordOperation(operation, time.Now())
+
+	err := in.service.CheckpointContainer(containerID, options)
+	recordError(operation, err)
+	return err
+}
+
+func (in instrumentedRuntimeService) RestoreContainer(containerID string, options *runtimeapi.RestoreContainerOptions) error {
+	const operation = "restore_container"
+	defer recordOperation(operation, time.Now())
+
+	err := in.service.RestoreContainer(containerID, options)
+	recordError(operation, err)
+	return err
+}
+
+-----------------------------
+
+// Step 1 & 2: pull the image and create the container
+	containerID, containerConfig, message, err := m.createContainer(podSandboxID, podSandboxConfig, spec, pod, podStatus, pullSecrets, podIP, podIPs)
+	if err != nil {
+		return message, err
+	}
+
+	// Step 3: start the container.
+	err = m.runtimeService.StartContainer(containerID)
+	if err != nil {
+		s, _ := grpcstatus.FromError(err)
+		m.recordContainerEvent(pod, container, containerID, v1.EventTypeWarning, events.FailedToStartContainer, "Error: %v", s.Message())
+		return s.Message(), kubecontainer.ErrRunContainer
+	}
+	m.recordContainerEvent(pod, container, containerID, v1.EventTypeNormal, events.StartedContainer, fmt.Sprintf("Started container %s", container.Name))
+
+	// Symlink container logs to the legacy container log location for cluster logging
+	// support.
+	// TODO(random-liu): Remove this after cluster logging supports CRI container log path.
+	containerMeta := containerConfig.GetMetadata()
+	sandboxMeta := podSandboxConfig.GetMetadata()
+	legacySymlink := legacyLogSymlink(containerID, containerMeta.Name, sandboxMeta.Name,
+		sandboxMeta.Namespace)
+	containerLog := filepath.Join(podSandboxConfig.LogDirectory, containerConfig.LogPath)
+	// only create legacy symlink if containerLog path exists (or the error is not IsNotExist).
+	// Because if containerLog path does not exist, only dangling legacySymlink is created.
+	// This dangling legacySymlink is later removed by container gc, so it does not make sense
+	// to create it in the first place. it happens when journald logging driver is used with docker.
+	if _, err := m.osInterface.Stat(containerLog); !os.IsNotExist(err) {
+		if err := m.osInterface.Symlink(containerLog, legacySymlink); err != nil {
+			klog.Errorf("Failed to create legacy symbolic link %q to container %q log %q: %v",
+				legacySymlink, containerID, containerLog, err)
+		}
+	}
+
+	// Step 4: execute the post start hook.
+	if container.Lifecycle != nil && container.Lifecycle.PostStart != nil {
+		kubeContainerID := kubecontainer.ContainerID{
+			Type: m.runtimeName,
+			ID:   containerID,
+		}
+		msg, handlerErr := m.runner.Run(kubeContainerID, pod, container, container.Lifecycle.PostStart)
+		if handlerErr != nil {
+			m.recordContainerEvent(pod, container, kubeContainerID.ID, v1.EventTypeWarning, events.FailedPostStartHook, msg)
+			if err := m.killContainer(pod, kubeContainerID, container.Name, "FailedPostStartHook", nil); err != nil {
+				klog.Errorf("Failed to kill container %q(id=%q) in pod %q: %v, %v",
+					container.Name, kubeContainerID.String(), format.Pod(pod), ErrPostStartHook, err)
+			}
+			return msg, fmt.Errorf("%s: %v", ErrPostStartHook, handlerErr)
+		}
+	}
+
+	return "", nil
+}
+
+func (m *kubeGenericRuntimeManager) createContainer(podSandboxID string, podSandboxConfig *runtimeapi.PodSandboxConfig, spec *startSpec, pod *v1.Pod, podStatus *kubecontainer.PodStatus, pullSecrets []v1.Secret, podIP string, podIPs []string) (containerID string, containerConfig *runtimeapi.ContainerConfig, message string, err error) {
+	container := spec.container
+
+-----------------------------
+
+// restoreContainer migrates and starts a container and returns a message indicates why it is failed on error.
+// It starts the container through the following steps:
+// * pull container snapshot
+// * restore the container
+// * run the post start lifecycle hooks (if applicable)
+func (m *kubeGenericRuntimeManager) restoreContainer(podSandboxConfig *runtimeapi.PodSandboxConfig, spec *startSpec, pod *v1.Pod, containerID string, containerConfig *runtimeapi.ContainerConfig, checkpointPath string) (string, error) {
+	container := spec.container
+
+	// restore the container.
+	err := m.runtimeService.RestoreContainer(containerID, &runtimeapi.RestoreContainerOptions{
+		CheckpointPath: checkpointPath,
+	})
+
+-----------------------------
+
+// Step 7: start or clone the containers in podContainerChanges.ContainersToStart.
+	// If there is reference to a Pod to clone and no container has been started yet, assume we need to migrate.
+	// TODO(schrej): make sure this doesn't lead to issues with crashed single-container pods. (pod.Status.Phase == v1.PodPending &&)
+	// Maybe remove ClonePod after we're done.
+	// TODO(schrej): how to handle failure?
+	// This contains most parts from the regular start() function
+	klog.Info("Should we migrate?", pod.Status.Phase, pod.Spec.ClonePod, len(podContainerChanges.ContainersToStart) == len(pod.Spec.Containers))
+	if pod.Spec.ClonePod != "" && len(podContainerChanges.ContainersToStart) == len(pod.Spec.Containers) {
+		containerIDs := make([]string, len(podContainerChanges.ContainersToStart))
+		containerConfigs := make([]*runtimeapi.ContainerConfig, len(podContainerChanges.ContainersToStart))
+		startContainerResults := make([]*kubecontainer.SyncResult, len(podContainerChanges.ContainersToStart))
+		// Create all the containers we want to migrate
+		for _, idx := range podContainerChanges.ContainersToStart {
+			spec := containerStartSpec(&pod.Spec.Containers[idx])
+			startContainerResults[idx] = kubecontainer.NewSyncResult(kubecontainer.StartContainer, spec.container.Name)
+			result.AddSyncResult(startContainerResults[idx])
+
+			klog.V(1).Infof("Creating container %+v in pod %v by migration", spec.container, format.Pod(pod))
+
+			// Fetch image and create container
+			// TODO(schrej): We probably need to fetch the image from the old pod to make sure its exactly identical
+			var msg string
+			var err error
+			if containerIDs[idx], containerConfigs[idx], msg, err = m.createContainer(podSandboxID, podSandboxConfig, spec, pod, podStatus, pullSecrets, podIP, podIPs); err != nil {
+				startContainerResults[idx].Fail(err, msg)
+				// known errors that are logged in other places are logged at higher levels here to avoid
+				// repetitive log spam
+				switch {
+				case err == images.ErrImagePullBackOff:
+					klog.V(3).Infof("container creation failed: %v: %s", err, msg)
+				default:
+					utilruntime.HandleError(fmt.Errorf("container creation failed: %v: %s", err, msg))
+				}
+				return
+			}
+
+		}
+
+		// Prepare the migration on the source node
+		migResult, err := m.migrationManager.TriggerPodMigration(pod)
+		if err != nil {
+			utilruntime.HandleError(fmt.Errorf("failed to migrate pod %s: %v", pod.Name, err))
+		}
+
+		// Start the containers
+		wg := sync.WaitGroup{}
+		for _, idx := range podContainerChanges.ContainersToStart {
+			wg.Add(1)
+			go func(idx int) {
+				container := &pod.Spec.Containers[idx]
+				migrationContainer, ok := migResult.Containers[container.Name]
+				if !ok {
+					utilruntime.HandleError(fmt.Errorf("container %s missing from migration result while migrating pod %s", container.Name, pod.Name))
+					return
+				}
+				if msg, err := m.restoreContainer(podSandboxConfig, containerStartSpec(&pod.Spec.Containers[idx]), pod, containerIDs[idx], containerConfigs[idx], migrationContainer.CheckpointPath); err != nil {
+					startContainerResults[idx].Fail(err, msg)
+					utilruntime.HandleError(fmt.Errorf("container start failed: %v: %s", err, msg))
+					return
+				}
+				wg.Done()
+			}(idx)
+		}
+		wg.Wait()
+
+		return
+	}
+
+-----------------------------
+
+func (m *kubeGenericRuntimeManager) PrepareMigratePod(pod *v1.Pod, podStatus *kubecontainer.PodStatus, options *kubecontainer.MigratePodOptions) {
+	klog.V(2).Info("Preparing Pod %v for migration. %v", pod.Name, options)
+	for _, container := range pod.Spec.Containers {
+		ok := false
+	ContainsLoop:
+		for _, c := range options.Containers {
+			if container.Name == c {
+				ok = true
+				break ContainsLoop
+			}
+		}
+		if !ok {
+			continue
+		}
+
+		klog.V(2).Infof("Checkpointing container %v.", container.Name)
+
+		containerStatus := podStatus.FindContainerStatusByName(container.Name)
+
+		// If a container isn't running, it can't be live-migrated.
+		if containerStatus == nil || containerStatus.State != kubecontainer.ContainerStateRunning {
+			continue
+		}
+		checkpointName := fmt.Sprintf("%s_%s", pod.Name, container.Name)
+		m.runtimeService.CheckpointContainer(containerStatus.ID.ID, &runtimeapi.CheckpointContainerOptions{
+			CheckpointPath: "/var/lib/kubelet/migration/" + checkpointName,
+		})
+
+		// TODO(schrej): support mutliple containers at once
+		options.CheckpointPath <- path.Join("/var/lib/kubelet/migration", checkpointName)
+		return
+	}
+	options.CheckpointPath <- ""
+	return
+}
+
+-----------------------------
+// client.go
+package migration
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
+)
+
+// TODO(schrej): Maybe inject this for decoupling?
+const migrationEndpoint = ""
+
+func (m *manager) TriggerPodMigration(pod *v1.Pod) (Result, error) {
+	client, err := getHTTPClient()
+	if err != nil {
+		panic(err)
+	}
+	clonePod, err := m.kubeClient.CoreV1().Pods(pod.Namespace).Get(context.Background(), pod.Spec.ClonePod, metav1.GetOptions{})
+	if err != nil {
+		return Result{}, err
+	}
+
+	// TODO(schrej): fetch port from api
+	url := fmt.Sprintf("https://%s:10250/migrate/%s/%s/%s", clonePod.Status.HostIP, clonePod.Namespace, clonePod.Name, clonePod.Spec.Containers[0].Name)
+	response, err := client.Get(url)
+	if err != nil {
+		return Result{}, err
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return Result{}, fmt.Errorf("remote node answered with non-ok status code %v", response.StatusCode)
+	}
+	res := Result{}
+	dec := json.NewDecoder(response.Body)
+	if err := dec.Decode(&res); err != nil {
+		return Result{}, err
+	}
+
+	time.Sleep(time.Second)
+
+	return res, nil
+}
+
+func getHTTPClient() (*http.Client, error) {
+	config, err := clientcmd.BuildConfigFromFlags("", "/var/lib/kubelet/kubeconfig")
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig, err := rest.TLSConfigFor(config)
+	if err != nil {
+		return nil, err
+	}
+	tlsConfig.InsecureSkipVerify = true //TODO REMOVE
+	c := &http.Client{}
+	c.Transport = &http.Transport{TLSClientConfig: tlsConfig}
+	return c, nil
+}
+
+-----------------------------
+// migration.go
+package migration
+
+import (
+	"net/http"
+
+	"github.com/emicklei/go-restful"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/types"
+	clientset "k8s.io/client-go/kubernetes"
+	"k8s.io/klog/v2"
+	"k8s.io/kubernetes/pkg/kubelet/container"
+	kubepod "k8s.io/kubernetes/pkg/kubelet/pod"
+)
+
+type Manager interface {
+	HandleMigrationRequest(*restful.Request, *restful.Response)
+	FindMigrationForPod(*v1.Pod) (Migration, bool)
+	TriggerPodMigration(*v1.Pod) (Result, error)
+}
+
+type Migration interface {
+	Options() *container.MigratePodOptions
+	WaitUntilFinished()
+}
+
+func NewManager(kubeClient clientset.Interface, podManager kubepod.Manager, prepareMigartionFn prepareMigrationFunc) Manager {
+	return &manager{
+		kubeClient:         kubeClient,
+		podManager:         podManager,
+		prepareMigrationFn: prepareMigartionFn,
+		migrations:         make(map[types.UID]*migration),
+	}
+}
+
+type prepareMigrationFunc func(*v1.Pod)
+
+type manager struct {
+	kubeClient         clientset.Interface
+	podManager         kubepod.Manager
+	prepareMigrationFn prepareMigrationFunc
+
+	migrations map[types.UID]*migration
+}
+
+var _ Manager = &manager{}
+
+type migration struct {
+	containers []string
+	unblock    chan struct{}
+	created    chan string
+}
+
+type Result struct {
+	Containers map[string]ResultContainer
+}
+
+type ResultContainer struct {
+	CheckpointPath string
+}
+
+var _ Migration = &migration{}
+
+func (m *manager) HandleMigrationRequest(req *restful.Request, res *restful.Response) {
+	params := getMigrationRequestParams(req)
+	klog.V(2).Infof("POST Migrate - %v %v %v", params.podNamespace, params.podID, params.containerName)
+
+	var pod *v1.Pod
+	var ok bool
+	if pod, ok = m.podManager.GetPodByName(params.podNamespace, params.podID); !ok {
+		res.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	if pod.Status.Phase != v1.PodRunning {
+		res.WriteHeader(http.StatusConflict)
+		return
+	}
+
+	mig := m.newMigration(pod)
+	mig.containers = []string{params.containerName}
+
+	klog.V(2).Infof("Starting migration of Pod %v", pod.Name)
+	m.prepareMigrationFn(pod)
+
+	r := Result{Containers: map[string]ResultContainer{params.containerName: {CheckpointPath: <-mig.created}}}
+	res.WriteAsJson(r)
+	res.WriteHeader(http.StatusOK)
+	mig.unblock <- struct{}{}
+}
+
+func (m *manager) FindMigrationForPod(pod *v1.Pod) (Migration, bool) {
+	mig, ok := m.migrations[pod.UID]
+	return mig, ok
+}
+
+func (m *manager) newMigration(pod *v1.Pod) *migration {
+	mig := &migration{
+		unblock: make(chan struct{}),
+		created: make(chan string),
+	}
+	m.migrations[pod.UID] = mig
+	return mig
+}
+
+func (mg *migration) Options() *container.MigratePodOptions {
+	return &container.MigratePodOptions{
+		KeepRunning:    false,
+		CheckpointPath: mg.created,
+		Unblock:        mg.unblock,
+		Containers:     mg.containers,
+	}
+}
+
+func (mg *migration) WaitUntilFinished() {
+	<-mg.unblock
+}
+
+type migrationRequestParams struct {
+	podNamespace  string
+	podID         string
+	containerName string
+}
+
+func getMigrationRequestParams(req *restful.Request) migrationRequestParams {
+	return migrationRequestParams{
+		podNamespace:  req.PathParameter("podNamespace"),
+		podID:         req.PathParameter("podID"),
+		containerName: req.PathParameter("containerName"),
+	}
+}
+

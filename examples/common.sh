@@ -154,7 +154,9 @@ function install_liqo_k3d() {
         --pod-cidr $pod_cidr \
         --service-cidr $service_cidr \
         --api-server-url https://$api_server_address:6443 \
-        --kubeconfig $kubeconfig" "Failed to install liqo on cluster \"${cluster_name}\""
+        --kubeconfig $kubeconfig" "Failed to install liqo on cluster \"${cluster_name}\"
+        --version latest \
+        --local-chart-path /home/poggio/Documenti/GitHub/liqo/deployments/liqo/"
 
     success_clear_line "Liqo has been installed on cluster \"$cluster_name\"."
 }

@@ -18,6 +18,7 @@ RUN apk update && \
     echo "@testing https://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
     apk update && \
     apk add criu-dev@testing && \
+    apk add containerd@testing && \
     rm -rf /var/cache/apk/*
 
 ARG COMPONENT=virtual-kubelet
