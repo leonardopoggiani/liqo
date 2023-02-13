@@ -1,0 +1,6 @@
+vlc commands
+
+docker run -d -v "$(pwd)":/data -p 8080:8080 quay.io/galexrt/vlc:latest file:///data/video.mp4 --intf=dummy -I dummy -q --sout '#transcode{scodec=none}:http{mux=ffmpeg{mux=flv},dst=:8080/}'
+
+kubectl get node kind-control-plane \
+  --output jsonpath='{@.spec.podCIDR}'
