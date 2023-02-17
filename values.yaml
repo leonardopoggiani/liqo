@@ -327,7 +327,7 @@ proxy:
       limits: {}
       requests: {}
   # -- proxy image repository
-  imageName: "envoyproxy/envoy:v1.21.0"
+  imageName: "docker.io/envoyproxy/envoy:v1.21.0"
   service:
     type: "ClusterIP"
     annotations: {}
