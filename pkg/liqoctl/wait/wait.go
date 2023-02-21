@@ -48,7 +48,7 @@ func NewWaiterFromFactory(f *factory.Factory) *Waiter {
 	}
 }
 
-// ForUnpeering waits until the status on the foreiglcusters resource states that the in/outgoing peering has been successfully
+// ForUnpeering waits until the status on the foreign clusters resource states that the in/outgoing peering has been successfully
 // set to None or the timeout expires.
 func (w *Waiter) ForUnpeering(ctx context.Context, remoteClusterID *discoveryv1alpha1.ClusterIdentity) error {
 	remName := remoteClusterID.ClusterName
@@ -62,7 +62,7 @@ func (w *Waiter) ForUnpeering(ctx context.Context, remoteClusterID *discoveryv1a
 	return nil
 }
 
-// ForOutgoingUnpeering waits until the status on the foreiglcusters resource states that the outgoing peering has been successfully
+// ForOutgoingUnpeering waits until the status on the foreign clusters resource states that the outgoing peering has been successfully
 // set to None or the timeout expires.
 func (w *Waiter) ForOutgoingUnpeering(ctx context.Context, remoteClusterID *discoveryv1alpha1.ClusterIdentity) error {
 	remName := remoteClusterID.ClusterName
@@ -102,7 +102,7 @@ func (w *Waiter) ForNetwork(ctx context.Context, remoteClusterID *discoveryv1alp
 	return nil
 }
 
-// ForOutgoingPeering waits until the status on the foreiglcusters resource states that the outgoing peering has been successfully
+// ForOutgoingPeering waits until the status on the foreign clusters resource states that the outgoing peering has been successfully
 // established or the timeout expires.
 func (w *Waiter) ForOutgoingPeering(ctx context.Context, remoteClusterID *discoveryv1alpha1.ClusterIdentity) error {
 	remName := remoteClusterID.ClusterName

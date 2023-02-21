@@ -1,11 +1,16 @@
+# build and tag a Docker image
 docker build . --tag ghcr.io/leonardopoggiani/virtual-kubelet:latest
 
+# Push a docker image built locally
 docker push ghcr.io/leonardopoggiani/virtual-kubelet:latest
 
+# Show run args for the pod and which image is running
 kubectl describe pods virtual-kubelet-6cd848fdf9-h62wx -n liqo-tenant-milan-7ee780
 
+# Restart a deployment to perform changes
 kubectl rollout restart deployment -n liqo-tenant-milan-7ee780 virtual-kubelet 
 
+# Edit the pod to perform changes, the only field editable is "image"
 kubectl edit pods virtual-kubelet-54bf79f5d-tb8t2 -n liqo-tenant-milan-7ee780
 
 export KUBECONFIG="$PWD/liqo_kubeconf_rome"
