@@ -8,3 +8,6 @@ nodes:
     image: kindest/node:v1.25.0
   - role: worker
     image: kindest/node:v1.25.0
+    extraMounts:
+      - hostPath: /home/leonardo/Documents/GitHub/live-migration-operator/config/samples/migration-example
+        containerPath: /video
