@@ -180,9 +180,9 @@ discovery:
     # -- Allow (by default) the remote clusters to establish a peering with our cluster
     incomingPeeringEnabled: true
     # -- Enable the mDNS advertisement on LANs, set to false to not be discoverable from other clusters in the same LAN
-    enableAdvertisement: false
+    enableAdvertisement: true
     # -- Enable the mDNS discovery on LANs, set to false to not look for other clusters available in the same LAN
-    enableDiscovery: false
+    enableDiscovery: true
     # -- Time-to-live before an automatically discovered clusters is deleted from the list of available ones if no longer announced (in seconds)
     ttl: 90
 
@@ -207,7 +207,7 @@ auth:
     # -- The type of service used to expose the Authentication Service.
     # If you are exposing this service with an Ingress, you can change it to ClusterIP;
     # if your cluster does not support LoadBalancer services, consider to switch it to NodePort.
-    # See https://doc.liqo.io/installation/ for more details.
+    # See https://docs.liqo.io/en/stable/installation/install.html for more details.
     type: "LoadBalancer"
     # -- auth service annotations
     annotations: {}
@@ -225,7 +225,7 @@ auth:
     class: ""
   config:
     # -- Set to false to disable the authentication of discovered clusters. NB: use it only for testing installations
-    enableAuthentication: true
+    enableAuthentication: false
     # -- Override the default address where your service is available, you should configure it if behind a reverse proxy or NAT.
     addressOverride: ""
     # -- Overrides the port where your service is available, you should configure it if behind a reverse proxy or NAT or using an Ingress with a port different from 443.
