@@ -225,7 +225,7 @@ auth:
     class: ""
   config:
     # -- Set to false to disable the authentication of discovered clusters. NB: use it only for testing installations
-    enableAuthentication: false
+    enableAuthentication: true
     # -- Override the default address where your service is available, you should configure it if behind a reverse proxy or NAT.
     addressOverride: ""
     # -- Overrides the port where your service is available, you should configure it if behind a reverse proxy or NAT or using an Ingress with a port different from 443.
