@@ -31,3 +31,4 @@ spec:
     targetPort: 7999
   selector:
     run: flights-service
+`

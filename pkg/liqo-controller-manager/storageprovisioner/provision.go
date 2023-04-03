@@ -16,6 +16,7 @@ package storageprovisioner
 
 import (
 	"context"
+	"k8s.io/klog/v2"
 
 	v1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/sig-storage-lib-external-provisioner/v7/controller"
@@ -26,6 +27,9 @@ import (
 // Provision creates a storage asset and returns a PV object representing it.
 func (p *liqoLocalStorageProvisioner) Provision(ctx context.Context,
 	options controller.ProvisionOptions) (*v1.PersistentVolume, controller.ProvisioningState, error) {
+
+	klog.Infof("Provisioning a new local storage asset for PVC %s/%s", options.PVC.Namespace, options.PVC.Name)
+
 	if utils.IsVirtualNode(options.SelectedNode) {
 		return nil, controller.ProvisioningFinished, &controller.IgnoredError{
 			Reason: "the local storage provider is not providing storage for remote nodes"}
