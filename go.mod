@@ -8,7 +8,6 @@ require (
 	github.com/Azure/go-autorest/autorest/azure/auth v0.5.12
 	github.com/aws/aws-sdk-go v1.44.92
 	github.com/checkpoint-restore/go-criu/v6 v6.3.0
-	github.com/container-storage-interface/spec v1.8.0
 	github.com/containernetworking/plugins v1.2.0
 	github.com/coreos/go-iptables v0.6.0
 	github.com/go-git/go-git/v5 v5.5.2
@@ -45,7 +44,7 @@ require (
 	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v3 v3.0.1
-	helm.sh/helm/v3 v3.11.0
+	helm.sh/helm/v3 v3.11.1
 	inet.af/netaddr v0.0.0-20220811202034-502d2d690317
 	k8s.io/api v0.26.1
 	k8s.io/apiextensions-apiserver v0.26.1
