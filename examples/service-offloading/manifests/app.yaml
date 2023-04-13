@@ -13,6 +13,7 @@ spec:
       labels:
         run: flights-service
     spec:
+      nodeName: poggianifedora-1.novalocal
       containers:
       - image: liqo/flights-service
         name: flights-service

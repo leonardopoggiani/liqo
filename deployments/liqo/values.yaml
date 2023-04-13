@@ -121,7 +121,7 @@ networkManager:
   imageName: "ghcr.io/liqotech/liqonet"
   config:
     # -- The subnet used by the cluster for the pods, in CIDR notation
-    podCIDR: ""
+    podCIDR: "10.244.0.0/16"
     # -- The subnet used by the cluster for the services, in CIDR notation
     serviceCIDR: ""
     # -- Usually the IPs used for the pods in k8s clusters belong to private subnets.
